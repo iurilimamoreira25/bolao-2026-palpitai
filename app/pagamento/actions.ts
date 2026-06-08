@@ -1,8 +1,7 @@
 'use server'
 
-import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
-import { getAbacatePay, createTransparentPixCharge } from '@/lib/abacatepay'
+import { getAbacatePay } from '@/lib/abacatepay'
 import { revalidatePath } from 'next/cache'
 import type { Payment, Settings } from '@/types'
 
@@ -53,16 +52,11 @@ export async function criarCobrancaPix(): Promise<ActionResult> {
   const s = settings as Pick<Settings, 'entry_fee' | 'site_name'> | null
   const amountCents = Math.round(Number(s?.entry_fee ?? 50) * 100)
 
-  const createResult = await createTransparentPixCharge({
+  const abacate = getAbacatePay()
+  const createResult = await abacate.pixQrCode.create({
     amount: amountCents,
     expiresIn: 3600,
     description: `Inscrição — ${s?.site_name ?? 'Palpitaí'}`,
-    externalId: randomUUID(),
-    metadata: { userId: user.id, site: 'palpitai' },
-    customer: {
-      name: profile?.name || user.email || 'Participante',
-      email: profile?.email || user.email || '',
-    },
   })
 
   if (createResult.error !== null) return fail(createResult.error)

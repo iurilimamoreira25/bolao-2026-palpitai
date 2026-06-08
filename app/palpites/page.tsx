@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 import GameCard from '@/components/games/GameCard'
 import GroupStageBrowser from '@/components/games/GroupStageBrowser'
+import InviteCard from '@/components/ui/InviteCard'
 import type { Game, Prediction } from '@/types'
 import { STAGE_LABELS } from '@/types'
 import { CalendarX } from 'lucide-react'
@@ -36,6 +37,9 @@ export default async function PalpitesPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
+      {/* Convide a galera */}
+      <InviteCard />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

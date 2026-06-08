@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 import { getInitials } from '@/lib/utils'
+import InviteCard from '@/components/ui/InviteCard'
 import type { RankingEntry, PrizeSummary } from '@/types'
 import { BarChart2, Trophy } from 'lucide-react'
 
@@ -30,6 +31,9 @@ export default async function RankingPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
+      {/* Convide a galera */}
+      <InviteCard />
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-extrabold">Ranking</h1>

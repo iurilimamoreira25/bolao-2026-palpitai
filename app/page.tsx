@@ -1,11 +1,16 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase/server'
+import type { Settings, PrizeSummary } from '@/types'
 import {
   Trophy, Zap, Users, Star, ArrowRight, CheckCircle2,
-  UserPlus, Target, BarChart2, Medal,
+  UserPlus, Target, BarChart2, Medal, Megaphone,
 } from 'lucide-react'
 
-const prize = process.env.NEXT_PUBLIC_PRIZE ?? 'R$ 500,00'
+const EXAMPLE_COUNTS = [50, 100, 300, 500]
+
+const formatBRL = (n: number) =>
+  n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 const steps = [
   {
@@ -35,7 +40,33 @@ const scoring = [
   { label: 'Errou tudo',                   pts: '0 pts',  bg: 'bg-surface-muted', text: 'text-text-muted'},
 ]
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient()
+  const [{ data: settings }, { data: summary }] = await Promise.all([
+    supabase.from('settings').select('*').single(),
+    supabase.rpc('get_prize_summary').single(),
+  ])
+
+  const s  = settings as Settings | null
+  const ps = summary as PrizeSummary | null
+
+  const entryFee = s?.entry_fee  ?? 50
+  const adminFee = s?.admin_fee  ?? 0
+  const pct1     = s?.prize_pct_1 ?? 60
+  const pct2     = s?.prize_pct_2 ?? 30
+  const netPerPerson = entryFee - adminFee
+
+  const examples = EXAMPLE_COUNTS.map((count) => {
+    const pool = count * netPerPerson
+    return {
+      count,
+      prize1: Math.round(pool * (pct1 / 100) * 100) / 100,
+      prize2: Math.round(pool * (pct2 / 100) * 100) / 100,
+    }
+  })
+
+  const hasLivePrize = !!ps && ps.paid_count > 0
+
   return (
     <div className="min-h-screen bg-white">
       {/* ── Navbar mínima ── */}
@@ -82,8 +113,8 @@ export default function LandingPage() {
                 <span className="text-brand-lime-dark">mais animado</span> da copa
               </h1>
               <p className="text-base text-text-secondary mb-8 leading-relaxed">
-                Dê palpites nos jogos, suba no ranking e dispute{' '}
-                <strong className="text-text-primary">{prize}</strong> com seus amigos.
+                Dê palpites nos jogos, suba no ranking e dispute um{' '}
+                <strong className="text-text-primary">prêmio que cresce com o bolão</strong> junto dos seus amigos.
                 Cadastro gratuito — só paga quem quer concorrer ao prêmio.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -100,15 +131,42 @@ export default function LandingPage() {
             {/* Card direita — prêmio + flags */}
             <div className="flex flex-col gap-4">
               {/* Prêmio */}
-              <div className="bg-[#1A1A1A] rounded-2xl p-6 flex items-center gap-4">
-                <div className="bg-brand-lime/10 rounded-xl p-3">
-                  <Trophy size={32} className="text-brand-lime" />
+              {hasLivePrize && ps ? (
+                <div className="bg-[#1A1A1A] rounded-2xl p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-brand-lime/10 rounded-xl p-3">
+                      <Trophy size={32} className="text-brand-lime" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Prêmio em tempo real 🔴</p>
+                      <p className="text-2xl font-extrabold text-brand-lime">
+                        {formatBRL(ps.prize_1st)} <span className="text-sm text-gray-400 font-medium">no 1º</span>
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    +{formatBRL(ps.prize_2nd)} pro 2º lugar · {ps.paid_count}{' '}
+                    {ps.paid_count === 1 ? 'participante pagante' : 'participantes pagantes'} até agora.
+                    Atualiza ao vivo conforme mais gente entra.
+                  </p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Prêmio do bolão</p>
-                  <p className="text-3xl font-extrabold text-brand-lime">{prize}</p>
+              ) : (
+                <div className="bg-[#1A1A1A] rounded-2xl p-6">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="bg-brand-lime/10 rounded-xl p-3">
+                      <Trophy size={32} className="text-brand-lime" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Premiação proporcional</p>
+                      <p className="text-lg font-extrabold text-brand-lime">1º leva {pct1}% · 2º leva {pct2}%</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Sem valor fixo: o prêmio é todo o valor arrecadado nas inscrições, dividido entre os melhores palpiteiros.
+                    Quanto mais gente entra, maior o prêmio — veja exemplos abaixo 👇
+                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Preview ranking falso */}
               <div className="card p-5">
@@ -149,6 +207,58 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Premiação proporcional ── */}
+      <section className="py-16 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-flex items-center gap-1.5 bg-brand-lime/20 text-[#5a6e00] text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+              <Trophy size={11} />
+              Premiação 100% proporcional
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold mb-2">Quanto maior o bolão, maior o prêmio</h2>
+            <p className="text-text-secondary max-w-xl mx-auto leading-relaxed">
+              Não existe valor fixo: <strong className="text-text-primary">todo o valor arrecadado nas inscrições vira prêmio</strong>.{' '}
+              🥇 1º lugar leva <strong className="text-text-primary">{pct1}%</strong> do total · 🥈 2º lugar leva{' '}
+              <strong className="text-text-primary">{pct2}%</strong>.
+            </p>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="grid grid-cols-3 gap-2 px-5 py-3 text-xs font-bold text-text-muted uppercase tracking-wider border-b border-surface-border">
+              <span>Participantes pagantes</span>
+              <span className="text-right">🥇 1º lugar</span>
+              <span className="text-right">🥈 2º lugar</span>
+            </div>
+            {examples.map((ex, i) => (
+              <div
+                key={ex.count}
+                className={`grid grid-cols-3 gap-2 px-5 py-3.5 items-center ${i < examples.length - 1 ? 'border-b border-surface-border' : ''}`}
+              >
+                <span className="font-semibold text-text-primary">{ex.count} pessoas</span>
+                <span className="text-right font-bold text-brand-lime-dark">{formatBRL(ex.prize1)}</span>
+                <span className="text-right font-bold text-text-secondary">{formatBRL(ex.prize2)}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-text-muted text-center mt-3 leading-relaxed">
+            * Valores ilustrativos (simulação com inscrição de {formatBRL(entryFee)} por participante).
+            O prêmio real depende do número total de participantes pagantes — não é uma promessa de valor fixo.
+          </p>
+
+          <div className="mt-8 bg-[#1A1A1A] rounded-2xl p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Megaphone size={18} className="text-brand-lime" />
+              <p className="text-white font-semibold">Chame mais gente e o prêmio aumenta pra todo mundo 🚀</p>
+            </div>
+            <p className="text-gray-400 text-sm mb-5">Cadastro é grátis — só paga quem quiser concorrer ao prêmio.</p>
+            <Link href="/cadastro" className="btn-primary text-base px-7 py-3 rounded-xl inline-flex items-center gap-2">
+              Quero concorrer
+              <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </section>

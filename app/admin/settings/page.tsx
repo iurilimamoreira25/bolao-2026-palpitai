@@ -12,8 +12,9 @@ export default async function AdminSettingsPage() {
 
   const pct1    = s?.prize_pct_1    ?? 60
   const pct2    = s?.prize_pct_2    ?? 30
-  const pctH    = s?.prize_pct_house ?? 10
-  const somaOk  = pct1 + pct2 + pctH === 100
+  const pctH    = s?.prize_pct_house ?? 0
+  const soma    = pct1 + pct2 + pctH
+  const somaOk  = soma <= 100
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -38,7 +39,7 @@ export default async function AdminSettingsPage() {
               <div className="flex flex-col gap-1">
                 <label className="label">Prêmio (texto livre — preenchido automaticamente pelo sistema)</label>
                 <input name="prize" defaultValue={s?.prize ?? 'R$ 500,00'} required className="input" />
-                <p className="text-xs text-text-muted">Este campo aparece na landing page enquanto o sistema calcula o valor real.</p>
+                <p className="text-xs text-text-muted">Campo legado — o prêmio real agora é calculado automaticamente pelo sistema com base nos participantes pagantes e nos percentuais abaixo.</p>
               </div>
             </div>
           </section>
@@ -63,10 +64,10 @@ export default async function AdminSettingsPage() {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">R$</span>
                   <input name="admin_fee" type="number" min={0} step="0.01"
-                    defaultValue={s?.admin_fee ?? 5}
+                    defaultValue={s?.admin_fee ?? 0}
                     required className="input pl-9 font-bold" />
                 </div>
-                <p className="text-xs text-text-muted">Fica com a casa. Deduzida do valor de entrada.</p>
+                <p className="text-xs text-text-muted">Fica com a casa, deduzida da inscrição antes de formar o pool. Deixe 0 pra todo o valor ir direto pro prêmio.</p>
               </div>
             </div>
           </section>
@@ -74,7 +75,10 @@ export default async function AdminSettingsPage() {
           {/* Distribuição */}
           <section className="border-b border-surface-border pb-6">
             <h2 className="font-bold mb-1">Distribuição do prêmio (%)</h2>
-            <p className="text-xs text-text-muted mb-4">A soma deve ser exatamente 100%.</p>
+            <p className="text-xs text-text-muted mb-4">
+              A soma não pode passar de 100% — você não pode prometer mais do que é arrecadado.
+              O que sobrar (ex: Casa = 0%) simplesmente não é distribuído.
+            </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { name: 'prize_pct_1',    label: '1º lugar',  default: pct1, color: 'bg-yellow-400' },
@@ -97,12 +101,17 @@ export default async function AdminSettingsPage() {
             </div>
             {!somaOk && (
               <p className="text-xs text-red-500 mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                Atenção: a soma atual é {pct1 + pct2 + pctH}%. Ajuste para totalizar 100%.
+                Atenção: a soma atual é {soma}% — isso ultrapassa 100%. Ajuste para não prometer mais do que é arrecadado.
               </p>
             )}
-            {somaOk && (
+            {somaOk && soma === 100 && (
               <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                <span>✓</span> Soma = 100% — distribuição válida.
+                <span>✓</span> Soma = 100% — todo o valor arrecadado é distribuído entre os participantes.
+              </p>
+            )}
+            {somaOk && soma < 100 && (
+              <p className="text-xs text-text-muted mt-2 flex items-center gap-1">
+                <span>ℹ️</span> {soma}% vai para os participantes · {100 - soma}% não alocado fica de reserva (não é distribuído nem prometido a ninguém).
               </p>
             )}
           </section>
