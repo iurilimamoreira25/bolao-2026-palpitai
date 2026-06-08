@@ -5,7 +5,7 @@ import { formatMatchDate, isGameLocked, getFlagUrl } from '@/lib/utils'
 import { savePrediction } from '@/app/palpites/actions'
 import type { Game, Prediction } from '@/types'
 import Badge from '@/components/ui/Badge'
-import { Lock, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { Lock, Clock, MapPin, CheckCircle2, XCircle } from 'lucide-react'
 
 interface Props {
   game: Game
@@ -17,7 +17,7 @@ export default function GameCard({ game, prediction }: Props) {
 
   const [home, setHome] = useState(prediction?.home_score?.toString() ?? '')
   const [away, setAway] = useState(prediction?.away_score?.toString() ?? '')
-  const [saved,  setSaved]  = useState(false)
+  const [saved,  setSaved]  = useState(!!prediction)
   const [isPending, startTransition] = useTransition()
 
   function handleSave() {
@@ -25,7 +25,6 @@ export default function GameCard({ game, prediction }: Props) {
     startTransition(async () => {
       await savePrediction({ gameId: game.id, homeScore: Number(home), awayScore: Number(away) })
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
     })
   }
 
@@ -39,6 +38,13 @@ export default function GameCard({ game, prediction }: Props) {
         <div className="flex items-center gap-1.5">
           <Clock size={12} />
           <span>{formatMatchDate(game.match_date)}</span>
+          {game.city && (
+            <span className="flex items-center gap-1 text-text-muted/70">
+              <span>·</span>
+              <MapPin size={11} />
+              {game.city}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {game.group_name && <Badge color="gray">{game.group_name}</Badge>}
@@ -91,8 +97,8 @@ export default function GameCard({ game, prediction }: Props) {
                 min={0}
                 max={99}
                 value={home}
-                onChange={(e) => { setSaved(false); setHome(e.target.value) }}
-                disabled={locked}
+                onChange={(e) => setHome(e.target.value)}
+                disabled={locked || saved}
                 className="w-12 h-11 text-center text-xl font-bold border-2 rounded-xl focus:border-brand-lime focus:outline-none disabled:bg-surface-muted disabled:text-text-muted transition-colors"
                 placeholder="–"
               />
@@ -102,8 +108,8 @@ export default function GameCard({ game, prediction }: Props) {
                 min={0}
                 max={99}
                 value={away}
-                onChange={(e) => { setSaved(false); setAway(e.target.value) }}
-                disabled={locked}
+                onChange={(e) => setAway(e.target.value)}
+                disabled={locked || saved}
                 className="w-12 h-11 text-center text-xl font-bold border-2 rounded-xl focus:border-brand-lime focus:outline-none disabled:bg-surface-muted disabled:text-text-muted transition-colors"
                 placeholder="–"
               />
@@ -135,19 +141,21 @@ export default function GameCard({ game, prediction }: Props) {
         </div>
       )}
 
-      {/* Save button */}
+      {/* Save button / indicador de palpite salvo */}
       {!locked && !hasResult && (
-        <button
-          onClick={handleSave}
-          disabled={isPending || home === '' || away === ''}
-          className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50
-            ${saved
-              ? 'bg-green-100 text-green-700'
-              : 'bg-brand-lime text-[#1A1A1A] hover:bg-brand-lime-dark'
-            }`}
-        >
-          {isPending ? 'Salvando…' : saved ? '✓ Palpite salvo!' : 'Salvar palpite'}
-        </button>
+        saved ? (
+          <div className="w-full py-2.5 rounded-xl text-sm font-semibold text-center border-2 border-brand-lime bg-transparent text-text-primary">
+            Palpite salvo
+          </div>
+        ) : (
+          <button
+            onClick={handleSave}
+            disabled={isPending || home === '' || away === ''}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 bg-brand-lime text-[#1A1A1A] hover:bg-brand-lime-dark"
+          >
+            {isPending ? 'Salvando…' : 'Salvar palpite'}
+          </button>
+        )
       )}
     </div>
   )

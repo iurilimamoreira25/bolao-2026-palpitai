@@ -46,6 +46,10 @@ export default async function AdminJogosPage() {
             <input name="match_date" type="datetime-local" required className="input" />
           </div>
           <div className="flex flex-col gap-1">
+            <label className="label">Cidade-sede (opcional)</label>
+            <input name="city" placeholder="Ex: Miami" className="input" />
+          </div>
+          <div className="flex flex-col gap-1">
             <label className="label">Grupo (opcional)</label>
             <input name="group_name" placeholder="Ex: Grupo G" className="input" />
           </div>

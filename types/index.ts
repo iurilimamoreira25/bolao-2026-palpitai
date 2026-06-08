@@ -18,6 +18,7 @@ export interface Game {
   home_flag: string
   away_flag: string
   match_date: string
+  city: string | null
   group_name: string | null
   stage: 'group' | 'round_of_16' | 'quarter' | 'semi' | 'third' | 'final'
   home_score: number | null

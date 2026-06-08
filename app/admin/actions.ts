@@ -19,6 +19,7 @@ export async function createGame(formData: FormData) {
     home_flag:  formData.get('home_flag')  as string,
     away_flag:  formData.get('away_flag')  as string,
     match_date: formData.get('match_date') as string,
+    city:       (formData.get('city')       as string) || null,
     group_name: (formData.get('group_name') as string) || null,
     stage:      formData.get('stage')      as string,
   })

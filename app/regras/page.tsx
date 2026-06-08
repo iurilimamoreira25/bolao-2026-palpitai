@@ -95,7 +95,7 @@ export default async function RegrasPage() {
           'O ranking é atualizado em tempo real conforme os resultados são lançados.',
           'Em caso de empate na pontuação final, o critério de desempate é o número de placares exatos acertados.',
           'O prêmio é pago ao vencedor ao final da Copa do Mundo 2026.',
-          'Participação é gratuita. O prêmio é acordado entre os participantes.',
+          'O cadastro é gratuito, mas concorrer ao prêmio exige o pagamento da taxa de inscrição via Pix.',
         ].map((rule, i) => (
           <div key={i} className="flex items-start gap-3 text-sm text-text-secondary">
             <CheckCircle2 size={15} className="text-brand-lime-dark flex-shrink-0 mt-0.5" />

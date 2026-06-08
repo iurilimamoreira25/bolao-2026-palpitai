@@ -47,7 +47,7 @@ export default function LandingPage() {
               Entrar
             </Link>
             <Link href="/cadastro" className="btn-primary text-sm">
-              Participar grátis
+              Participar agora
             </Link>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function LandingPage() {
               <p className="text-base text-text-secondary mb-8 leading-relaxed">
                 Dê palpites nos jogos, suba no ranking e dispute{' '}
                 <strong className="text-text-primary">{prize}</strong> com seus amigos.
-                Simples, divertido e grátis.
+                Cadastro gratuito — só paga quem quer concorrer ao prêmio.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/cadastro" className="btn-primary text-base px-7 py-3 rounded-xl flex items-center gap-2">
@@ -213,7 +213,7 @@ export default function LandingPage() {
           <p className="text-gray-400 mb-8">Cadastre-se agora e não perca nenhum jogo.</p>
           <Link href="/cadastro" className="btn-primary text-base px-8 py-3 rounded-xl inline-flex items-center gap-2">
             <Zap size={18} />
-            Participar grátis
+            Quero participar
           </Link>
         </div>
       </section>
