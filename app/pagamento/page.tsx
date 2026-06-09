@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Settings } from '@/types'
 import { CheckCircle2, Wallet } from 'lucide-react'
@@ -10,8 +11,10 @@ export default async function PagamentoPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) redirect('/login')
+
   const [{ data: profile }, { data: settings }] = await Promise.all([
-    supabase.from('profiles').select('paid, paid_at, name').eq('id', user!.id).single(),
+    supabase.from('profiles').select('paid, paid_at, name').eq('id', user.id).single(),
     supabase.from('settings').select('*').single(),
   ])
 
