@@ -74,8 +74,12 @@ export default function PagamentoClient({ entryFee }: { entryFee: number }) {
     const result = await criarCobrancaPix()
     setLoading(false)
 
-    if (result.error !== null) {
+    if (result.error) {
       setError(result.error)
+      return
+    }
+    if (!result.data) {
+      setError('Erro inesperado ao gerar cobrança. Tente novamente.')
       return
     }
 

@@ -59,7 +59,10 @@ export async function criarCobrancaPix(): Promise<ActionResult> {
     description: `Inscrição — ${s?.site_name ?? 'Palpitaí'}`,
   })
 
-  if (createResult.error !== null) return fail(createResult.error)
+  if (!('data' in createResult) || !createResult.data || createResult.error) {
+    console.error('[criarCobrancaPix] AbacatePay error:', createResult.error, JSON.stringify(createResult))
+    return fail(createResult.error ?? 'Erro ao criar cobrança PIX. Tente novamente.')
+  }
   const pix = createResult.data
 
   const { data: saved, error: dbError } = await supabase
@@ -99,7 +102,10 @@ export async function verificarPagamento(pixId: string): Promise<ActionResult> {
 
   const abacate = getAbacatePay()
   const checkResult = await abacate.pixQrCode.check({ id: pixId })
-  if (checkResult.error !== null) return fail(checkResult.error)
+  if (!('data' in checkResult) || !checkResult.data || checkResult.error) {
+    console.error('[verificarPagamento] AbacatePay error:', checkResult.error, JSON.stringify(checkResult))
+    return fail(checkResult.error ?? 'Erro ao verificar pagamento.')
+  }
   const pix = checkResult.data
 
   if (pix.status !== payment.status) {
